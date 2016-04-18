@@ -22,11 +22,11 @@ BUCKET_NAME = 'itracker-track-data'
 s3 = Aws::S3::Client.new
 
 psql_config = {
-  :dbname => 'itracker_database',
-  :user => 'bigbug',
-  :password => '19862222',
-  :host => 'itracker-db-instance.cyrqwpvizyf2.us-east-1.rds.amazonaws.com',
-  :port => '5432'
+  :dbname => ENV['itracker_psql_database'],
+  :user => ENV['itracker_psql_user'],
+  :password => ENV['itracker_psql_password'],
+  :host => ENV['itracker_psql_host'],
+  :port => ENV['itracker_psql_port']
 }
 psql = PG.connect psql_config
 
