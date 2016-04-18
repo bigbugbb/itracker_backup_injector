@@ -24,7 +24,7 @@ s3 = Aws::S3::Client.new
 psql_config = {
   :dbname => 'itracker_database',
   :user => 'bigbug',
-  :password => 'xxx',
+  :password => '19862222',
   :host => 'itracker-db-instance.cyrqwpvizyf2.us-east-1.rds.amazonaws.com',
   :port => '5432'
 }
@@ -53,10 +53,11 @@ def import_objects(psql, objects)
       s3_key = object.key
       type   = splits.last
       date   = object.key[0, 10].gsub!('/', '-')
+      hour   = object.key[11, 2].to_i
       now    = DateTime.now.to_s
       object_import_sql = """
-        INSERT INTO backups (s3_key, type, date, created_at, updated_at)
-                SELECT '#{s3_key}', '#{type}', '#{date}', '#{now}', '#{now}'
+        INSERT INTO backups (s3_key, type, date, hour, created_at, updated_at)
+                SELECT '#{s3_key}', '#{type}', '#{date}', #{hour}, '#{now}', '#{now}'
                 WHERE NOT EXISTS (SELECT 1 FROM backups WHERE s3_key='#{s3_key}')
       """
       puts object_import_sql
