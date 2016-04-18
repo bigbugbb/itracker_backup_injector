@@ -1,0 +1,6 @@
+env.itracker_psql_database=itracker_database
+env.itracker_psql_user=
+env.itracker_psql_password=
+env.itracker_psql_host=itracker-db-instance.cyrqwpvizyf2.us-east-1.rds.amazonaws.com
+env.itracker_psql_port=5432
+
