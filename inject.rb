@@ -49,26 +49,26 @@ def import_objects(psql, objects)
   begin
     values = nil
     objects.each do |object|
-      s3_key = object.key
-      type   = object.key.split('/').last
-      date   = object.key[0, 10].gsub!('/', '-')
-      hour   = object.key[11, 2].to_i
-      now    = DateTime.now.to_s
+      s3_key   = object.key
+      category = object.key.split('/').last
+      date     = object.key[0, 10].gsub!('/', '-')
+      hour     = object.key[11, 2].to_i
+      now      = DateTime.now.to_s
       # object_import_sql = """
-      #   INSERT INTO backups (s3_key, type, date, hour, created_at, updated_at)
-      #           SELECT '#{s3_key}', '#{type}', '#{date}', #{hour}, '#{now}', '#{now}'
+      #   INSERT INTO backups (s3_key, category, date, hour, created_at, updated_at)
+      #           SELECT '#{s3_key}', '#{category}', '#{date}', #{hour}, '#{now}', '#{now}'
       #           WHERE NOT EXISTS (SELECT 1 FROM backups WHERE s3_key='#{s3_key}')
       # """
       if !values
-        values = "('#{s3_key}', '#{type}', '#{date}', #{hour}, '#{now}', '#{now}')"
+        values = "('#{s3_key}', '#{category}', '#{date}', #{hour}, '#{now}', '#{now}')"
       else
-        values += ",('#{s3_key}', '#{type}', '#{date}', #{hour}, '#{now}', '#{now}')"
+        values += ",('#{s3_key}', '#{category}', '#{date}', #{hour}, '#{now}', '#{now}')"
       end
     end
 
     if values
       object_import_sql = """
-        INSERT INTO backups (s3_key, type, date, hour, created_at, updated_at)
+        INSERT INTO backups (s3_key, category, date, hour, created_at, updated_at)
         VALUES #{values}
         ON CONFLICT DO NOTHING
       """
