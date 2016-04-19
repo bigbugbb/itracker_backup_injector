@@ -46,19 +46,31 @@ def fetch_objects(client, bucket, prefix)
 end
 
 def import_objects(psql, objects)
-  # puts "#{object.key} => #{object.last_modified}"
   begin
+    values = nil
     objects.each do |object|
-      splits = object.key.split('/')
       s3_key = object.key
-      type   = splits.last
+      type   = object.key.split('/').last
       date   = object.key[0, 10].gsub!('/', '-')
       hour   = object.key[11, 2].to_i
       now    = DateTime.now.to_s
+      # object_import_sql = """
+      #   INSERT INTO backups (s3_key, type, date, hour, created_at, updated_at)
+      #           SELECT '#{s3_key}', '#{type}', '#{date}', #{hour}, '#{now}', '#{now}'
+      #           WHERE NOT EXISTS (SELECT 1 FROM backups WHERE s3_key='#{s3_key}')
+      # """
+      if !values
+        values = "('#{s3_key}', '#{type}', '#{date}', #{hour}, '#{now}', '#{now}')"
+      else
+        values += ",('#{s3_key}', '#{type}', '#{date}', #{hour}, '#{now}', '#{now}')"
+      end
+    end
+
+    if values
       object_import_sql = """
         INSERT INTO backups (s3_key, type, date, hour, created_at, updated_at)
-                SELECT '#{s3_key}', '#{type}', '#{date}', #{hour}, '#{now}', '#{now}'
-                WHERE NOT EXISTS (SELECT 1 FROM backups WHERE s3_key='#{s3_key}')
+        VALUES #{values}
+        ON CONFLICT DO NOTHING
       """
       puts object_import_sql
       psql.exec object_import_sql
