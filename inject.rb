@@ -4,7 +4,6 @@ require 'date'
 require 'pg'
 require 'aws-sdk'
 
-bucket_name = 'itracker-track-data'
 PREFIX_PATTERN = '%Y/%m/%d'
 BUCKET_NAME = 'itracker-track-data'
 
@@ -22,11 +21,11 @@ BUCKET_NAME = 'itracker-track-data'
 s3 = Aws::S3::Client.new
 
 psql_config = {
-  :dbname => ENV['itracker_psql_database'],
-  :user => ENV['itracker_psql_user'],
+  :dbname   => ENV['itracker_psql_database'],
+  :user     => ENV['itracker_psql_user'],
   :password => ENV['itracker_psql_password'],
-  :host => ENV['itracker_psql_host'],
-  :port => ENV['itracker_psql_port']
+  :host     => ENV['itracker_psql_host'],
+  :port     => ENV['itracker_psql_port']
 }
 psql = PG.connect psql_config
 
@@ -50,7 +49,7 @@ def import_objects(psql, objects)
     values = nil
     objects.each do |object|
       s3_key   = object.key
-      category = object.key.split('/').last
+      category = object.key.split('/').last[0..-9]
       date     = object.key[0, 10].gsub!('/', '-')
       hour     = object.key[11, 2].to_i
       now      = DateTime.now.to_s

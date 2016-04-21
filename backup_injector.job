@@ -1,4 +1,4 @@
 type=command
 failure.email=bigbugbb@gmail.com
-command=git clone --depth 1 --branch master https://github.com/bigbugbb/itracker_backup_injector.git
-command.1=./itracker_backup_injector/start.sh
+command=git clone --branch master https://github.com/bigbugbb/itracker_backup_injector.git
+command.1=bash ./itracker_backup_injector/start.sh
