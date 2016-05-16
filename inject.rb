@@ -2,8 +2,10 @@
 
 require 'date'
 require 'pg'
+require 'logger'
 require 'aws-sdk'
 
+@logger = Logger.new(STDOUT)
 PREFIX_PATTERN = '%Y/%m/%d'
 BUCKET_NAME = 'itracker-track-data'
 
@@ -20,14 +22,21 @@ BUCKET_NAME = 'itracker-track-data'
 
 s3 = Aws::S3::Client.new
 
-psql_config = {
-  :dbname   => ENV['itracker_psql_database'],
-  :user     => ENV['itracker_psql_user'],
-  :password => ENV['itracker_psql_password'],
-  :host     => ENV['itracker_psql_host'],
-  :port     => ENV['itracker_psql_port']
-}
-psql = PG.connect psql_config
+def with_psql
+  begin
+    psql_config = {
+      :dbname   => ENV['itracker_psql_database'],
+      :user     => ENV['itracker_psql_user'],
+      :password => ENV['itracker_psql_password'],
+      :host     => ENV['itracker_psql_host'],
+      :port     => ENV['itracker_psql_port']
+    }
+    psql = PG.connect psql_config
+    yield psql
+  ensure
+    psql.close if psql
+  end
+end
 
 def fetch_objects(client, bucket, prefix)
   marker, done = nil, false
@@ -66,24 +75,24 @@ def import_objects(psql, objects)
     end
 
     if values
-      object_import_sql = """
+      sql = """
         INSERT INTO backups (s3_key, category, date, hour, created_at, updated_at)
         VALUES #{values}
         ON CONFLICT DO NOTHING
       """
-      puts object_import_sql
-      psql.exec object_import_sql
+      @logger.info(sql)
+      psql.exec sql
     end
   rescue PG::Error => e
-    puts e.message
+    @logger.error(e.message)
   end
 end
 
-(0..7).each do |n|
-  date = (Date.today - n).strftime(PREFIX_PATTERN)
-  fetch_objects(s3, BUCKET_NAME, date) do |objects|
-    import_objects(psql, objects)
+with_psql do |psql|
+  (0..7).each do |n|
+    date = (Date.today - n).strftime(PREFIX_PATTERN)
+    fetch_objects(s3, BUCKET_NAME, date) do |objects|
+      import_objects(psql, objects)
+    end
   end
 end
-
-psql.close if psql
