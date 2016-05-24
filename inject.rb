@@ -89,7 +89,7 @@ def import_objects(psql, objects)
 end
 
 with_psql do |psql|
-  (0..7).each do |n|
+  (0..30).each do |n|
     date = (Date.today - n).strftime(PREFIX_PATTERN)
     fetch_objects(s3, BUCKET_NAME, date) do |objects|
       import_objects(psql, objects)
