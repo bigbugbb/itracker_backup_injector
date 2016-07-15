@@ -20,7 +20,9 @@ BUCKET_NAME = 'itracker-track-data'
 # For more information about this interface to Amazon S3, see:
 # http://docs.aws.amazon.com/sdkforruby/api/Aws/S3/Resource.html
 
-s3 = Aws::S3::Client.new
+s3 = Aws::S3::Client.new(
+  region: 'us-east-1'
+)
 
 def with_psql
   begin
@@ -89,7 +91,7 @@ def import_objects(psql, objects)
 end
 
 with_psql do |psql|
-  (0..30).each do |n|
+  (0..90).each do |n|
     date = (Date.today - n).strftime(PREFIX_PATTERN)
     fetch_objects(s3, BUCKET_NAME, date) do |objects|
       import_objects(psql, objects)
